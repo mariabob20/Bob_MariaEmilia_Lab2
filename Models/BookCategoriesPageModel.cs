@@ -1,4 +1,5 @@
 ﻿using Bob_MariaEmilia_Lab2.Data;
+using Bob_MariaEmilia_Lab2.Migrations;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 
@@ -7,12 +8,11 @@ namespace Bob_MariaEmilia_Lab2.Models
     public class BookCategoriesPageModel:PageModel
     {
         public List<AssignedCategoryData> AssignedCategoryDataList;
-        public void PopulateAssignedCategoryData(Bob_MariaEmilia_Lab2Context context,
-        Book book)
+        public void PopulateAssignedCategoryData(Bob_MariaEmilia_Lab2Context context,Book Book)
         {
             var allCategories = context.Category;
             var bookCategories = new HashSet<int>(
-            book.BookCategories.Select(c => c.CategoryID)); //
+            Book.BookCategories.Select(c => c.CategoryID)); //
             AssignedCategoryDataList = new List<AssignedCategoryData>();
             foreach (var cat in allCategories)
             {
