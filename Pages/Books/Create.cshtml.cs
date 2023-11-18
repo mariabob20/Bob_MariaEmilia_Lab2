@@ -19,7 +19,7 @@ namespace Bob_MariaEmilia_Lab2.Pages.Books
             _context = context;
         }
 
-              public IActionResult OnGet(Book book)
+              public IActionResult OnGet()
         {
             var authorList = _context.Author.Select(x => new
             {
@@ -30,8 +30,8 @@ namespace Bob_MariaEmilia_Lab2.Pages.Books
             ViewData["PublisherID"] = new SelectList(_context.Set<Publisher>(), "ID", "PublisherName");
             ViewData["AuthorID"] = new SelectList(_context.Set<Author>(), "ID", "AuthorFirstName");
 
-            var Book = new Book();
-            Book.BookCategories = new List<BookCategory>();
+            var book = new Book();
+            book.BookCategories = new List<BookCategory>();
             PopulateAssignedCategoryData(_context, book); 
             return Page();
         }
