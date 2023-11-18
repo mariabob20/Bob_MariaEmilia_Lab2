@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Bob_MariaEmilia_Lab2.Data;
 using Bob_MariaEmilia_Lab2.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Bob_MariaEmilia_Lab2.Pages.Books
 {

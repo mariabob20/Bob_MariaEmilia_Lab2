@@ -32,8 +32,7 @@ namespace Bob_MariaEmilia_Lab2.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<IdentityUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
-        private readonly Bob_MariaEmilia_Lab2Context _context;
-        private readonly Bob_MariaEmilia_Lab2.Data.Bob_MariaEmilia_Lab2Context context;
+        private readonly Bob_MariaEmilia_Lab2.Data.Bob_MariaEmilia_Lab2Context _context;
 
         public RegisterModel(
             UserManager<IdentityUser> userManager,
@@ -52,13 +51,16 @@ namespace Bob_MariaEmilia_Lab2.Areas.Identity.Pages.Account
             _context = context;
         }
 
+        
+        [BindProperty]
+        
+        public Member Member { get; set; }
+
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
         ///     directly from your code. This API may change or be removed in future releases.
         /// </summary>
-        /// [BindProperty]
-        public Member Member { get; set; }
-        [BindProperty]
+       ///[BindProperty]
         public InputModel Input { get; set; }
 
         /// <summary>
@@ -118,60 +120,54 @@ namespace Bob_MariaEmilia_Lab2.Areas.Identity.Pages.Account
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
-            ExternalLogins = (await
-           _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-
-            var user = CreateUser();
-            await _userStore.SetUserNameAsync(user, Input.Email,
-           CancellationToken.None);
-            await _emailStore.SetEmailAsync(user, Input.Email,
-           CancellationToken.None);
-            var result = await _userManager.CreateAsync(user,
-           Input.Password);
-            Member.Email = Input.Email;
-            _context.Member.Add(Member);
-            await _context.SaveChangesAsync();
-            if (result.Succeeded)
+            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            if (ModelState.IsValid)
             {
-                _logger.LogInformation("User created a new account with password.");
-               var userId = await _userManager.GetUserIdAsync(user);
-                var code = await
-               _userManager.GenerateEmailConfirmationTokenAsync(user);
-                code =
-               WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-                var callbackUrl = Url.Page(
-                "/Account/ConfirmEmail",
-               pageHandler: null,
-               values: new
-               {
-                   area = "Identity",
-                   userId = userId,
-                   code = code,
-                   returnUrl = returnUrl
-               },
-                protocol: Request.Scheme);
-                await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-               
-                $"Please confirm your account by <a href = '{HtmlEncoder.Default.Encode(callbackUrl)}' > clicking here </ a >.");
-           
+                var user = CreateUser();
 
- if
-(_userManager.Options.SignIn.RequireConfirmedAccount)
+                await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+                await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+                var result = await _userManager.CreateAsync(user, Input.Password);
+
+                Member.Email = Input.Email;
+                _context.Member.Add(Member);
+                await _context.SaveChangesAsync();
+
+                if (result.Succeeded)
                 {
-                    return RedirectToPage("RegisterConfirmation", new
+                    _logger.LogInformation("User created a new account with password.");
+
+                    var role = await _userManager.AddToRoleAsync(user, "User");
+                    var userId = await _userManager.GetUserIdAsync(user);
+                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+                    var callbackUrl = Url.Page(
+                        "/Account/ConfirmEmail",
+                        pageHandler: null,
+                        values: new { area = "Identity", userId, code, returnUrl },
+                        protocol: Request.Scheme);
+
+                    await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
+                        $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+
+                    if (_userManager.Options.SignIn.RequireConfirmedAccount)
                     {
-                        email = Input.Email,
-                        returnUrl = returnUrl
-                    });
-                }
-                else
-                {
-                    await _signInManager.SignInAsync(user,
-                   isPersistent: false);
-                    return LocalRedirect(returnUrl);
+                        return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl });
+                    }
+                    else
+                    {
+                        await _signInManager.SignInAsync(user, isPersistent: false);
+                        return LocalRedirect(returnUrl);
+                    }
                 }
 
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
             }
+
+            // If we got this far, something failed, redisplay form
             return Page();
         }
 
@@ -197,5 +193,6 @@ namespace Bob_MariaEmilia_Lab2.Areas.Identity.Pages.Account
             }
             return (IUserEmailStore<IdentityUser>)_userStore;
         }
+          
     }
 }
